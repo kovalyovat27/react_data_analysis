@@ -8,8 +8,19 @@
     width: 50%;
 }
 
-.readingArea {
-    width: 100%;
-    color: black;
-    background-color: white;
+.infoMessage {
+    color: #6c757d;
+}
+
+.infoMessage:hover{
+    color: darkgray;
+}
+
+.link {
+    color: #6c757d;
+    padding-right: 15px;
+}
+
+.link:hover{
+    color: darkgray;
 }

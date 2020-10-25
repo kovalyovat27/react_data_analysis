@@ -1,7 +1,18 @@
 import React, {Component} from "react";
+
 import FileAnalyzer from "./FileAnalyzer";
-import FrequencyDiagram from "../graph/FrequencyDiagram";
+import GraphsViewer from "../graph/GraphsViewer";
+import FormFileLabel from "react-bootstrap/FormFileLabel";
+import Navbar from "react-bootstrap/Navbar";
+import Nav from "react-bootstrap/Nav";
 import css from "./reader.module.css";
+import Overview from "./overview/Overview";
+import {
+    Switch,
+    Route,
+    Redirect,
+    Link
+} from "react-router-dom";
 
 export default class Reader extends Component {
     state = {
@@ -61,81 +72,41 @@ export default class Reader extends Component {
         });
     }
 
-    getFrequencyMap = array => {
-        return array.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
-    }
-
-    getFrequencyByLengthMap = array => {
-        return array.reduce((acc, e) => acc.set(e.length, (acc.get(e.length) || 0) + 1), new Map());
-    }
-
-    sortByEntries = array => {
-        return Array.from(array.entries())
-            .sort((a, b) => b[1] - a[1]);
-    }
-
     render() {
-        const hamFrequencies = this.sortByEntries(this.getFrequencyMap(this.state.hamWords));
-        const spamFrequencies = this.sortByEntries(this.getFrequencyMap(this.state.spamWords));
-        const hamFrequenciesByLength = this.sortByEntries(this.getFrequencyByLengthMap(this.state.hamWords));
-        const spamFrequenciesByLength = this.sortByEntries(this.getFrequencyByLengthMap(this.state.spamWords));
-        const hamMessagesFrequenciesByLength = this.sortByEntries(this.getFrequencyMap(this.state.hamMessagesLength));
-        const spamMessagesFrequenciesByLength = this.sortByEntries(this.getFrequencyMap(this.state.spamMessagesLength));
-
-        const topTwentyWordsByFrequency = "Top 20 words by frequency";
-        const topWordsLength = "Top words length by frequency in symbols.";
-        const topMessagesLength = "Top messages length by frequency in symbols.";
-        
+        const {history} = this.props
+        const {hamWords, spamWords, hamMessagesLength, spamMessagesLength, filesInfo} = this.state;
         return <>
-            {!this.state.isProceed
-                ? (
-                    <>
-                        <label className={css.readingArea}>Just click here and choose files to read
-                            <input type="file" multiple={true} hidden={true} onChange={e => this.showFile(e)}/>
-                        </label>
-                    </>)
-                : <h1>Proceed data, wait please</h1>
-            }
-            <div className={css.fullCanvas}>
-                {hamFrequencies.length > 0 &&
-                <div className={css.halfCanvas}>
-                    <>HAM</>
-                    <FrequencyDiagram
-                        label={topTwentyWordsByFrequency}
-                        params={Array.from(hamFrequencies.slice(0, 20).map(a => a[0]))}
-                        data={Array.from(hamFrequencies.slice(0, 20).map(a => a[1]))}
-                    />
-                    <FrequencyDiagram
-                        label={topWordsLength}
-                        params={Array.from(hamFrequenciesByLength.map(a => a[0]))}
-                        data={Array.from(hamFrequenciesByLength.map(a => a[1]))}
-                    />
-                    <FrequencyDiagram
-                        label={topMessagesLength}
-                        params={Array.from(hamMessagesFrequenciesByLength.map(a => a[0]))}
-                        data={Array.from(hamMessagesFrequenciesByLength.map(a => a[1]))}
-                    />
-                </div>}
-                {spamFrequencies.length > 0 &&
-                <div className={css.halfCanvas}>
-                    <>SPAM</>
-                    <FrequencyDiagram
-                        label={topTwentyWordsByFrequency}
-                        params={Array.from(spamFrequencies.slice(0, 20).map(a => a[0]))}
-                        data={Array.from(spamFrequencies.slice(0, 20).map(a => a[1]))}
-                    />
-                    <FrequencyDiagram
-                        label={topWordsLength}
-                        params={Array.from(spamFrequenciesByLength.slice(0, 20).map(a => a[0].length))}
-                        data={Array.from(spamFrequenciesByLength.slice(0, 20).map(a => a[1]))}
-                    />
-                    <FrequencyDiagram
-                        label={topMessagesLength}
-                        params={Array.from(spamMessagesFrequenciesByLength.map(a => a[0]))}
-                        data={Array.from(spamMessagesFrequenciesByLength.map(a => a[1]))}
-                    />
-                </div>}
-            </div>
+            <Navbar variant={"dark"}>
+                <Nav className="mr-auto">
+                    <Link className={css.link} to="/overview">Overview</Link>
+                    <Link className={css.link} to="/graphs">Graphs</Link>
+                    <Link className={css.link} to="/tools">Tools</Link>
+                </Nav>
+                <div>
+                    {!this.state.isProceed
+                        ? (
+                            <>
+                                <FormFileLabel>
+                                    <div className={css.infoMessage}>Just click here and choose files to read</div>
+                                    <input type="file" multiple={true} hidden={true} onChange={e => this.showFile(e)}/>
+                                </FormFileLabel>
+                            </>)
+                        : <div className={css.infoMessage}>Proceed data, wait please</div>
+                    }
+                </div>
+            </Navbar>
+            <Switch>
+                <Route history={history} path='/overview'>
+                    <Overview filesInfo={filesInfo}/>
+                </Route>
+                <Route history={history} path='/graphs'>
+                    <GraphsViewer hamWords={hamWords}
+                                  spamWords={spamWords}
+                                  hamMessagesLength={hamMessagesLength}
+                                  spamMessagesLength={spamMessagesLength}/>
+                </Route>
+                <Redirect from='/' to='/overview'/>
+            </Switch>
         </>;
     }
 }
